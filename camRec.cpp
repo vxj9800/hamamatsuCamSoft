@@ -147,7 +147,7 @@ void startCamRecording(std::ostream& out, HDCAM hdcam, camRecInfo recInfo)
                                 out << "Could not retrieve image width and height properties." << std::endl;
                             else
                             {
-                                uint16_t imgWidth = (uint16_t)imgWidth_d, imgHeight = (uint16_t)imgHeight_d, nFrames = (uint16_t)recInfo.nFrames;
+                                uint32_t imgWidth = (uint32_t)imgWidth_d, imgHeight = (uint32_t)imgHeight_d, nFrames = (uint32_t)recInfo.nFrames;
                                 imgsFile.write((char*)&imgWidth, sizeof(imgWidth));
                                 imgsFile.write((char*)&imgHeight, sizeof(imgHeight));
                                 imgsFile.write((char*)&nFrames, sizeof(nFrames));
