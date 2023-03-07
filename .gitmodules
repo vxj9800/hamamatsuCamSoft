@@ -1,0 +1,9 @@
+[submodule "cli"]
+	path = cli
+	url = https://github.com/daniele77/cli
+[submodule "serialib"]
+	path = serialib
+	url = https://github.com/imabot2/serialib
+[submodule "glm"]
+	path = glm
+	url = https://github.com/g-truc/glm

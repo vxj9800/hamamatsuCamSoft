@@ -1,0 +1,135 @@
+#include "camRec.h"
+
+void recordFrames(std::ostream& out, HDCAM hdcam, HDCAMWAIT hwait, camRecInfo recInfo)
+{
+    DCAMERR err;
+
+    // create file
+    DCAMREC_OPEN	recopen;
+    memset(&recopen, 0, sizeof(recopen));
+    recopen.size = sizeof(recopen);
+    recopen.path = recInfo.filePath.c_str();		// it should set new file name.
+    recopen.ext = _T("dcimg");
+    recopen.maxframepersession = recInfo.nFrames;
+    recopen.userdatasize_file = 0;
+    recopen.usertextsize_file = 0;
+    recopen.userdatasize_session = 0;
+    recopen.usertextsize_session = 0;
+    recopen.userdatasize = 0;
+    recopen.usertextsize = 0;
+
+    err = dcamrec_open(&recopen);
+    if (failed(err))
+    {
+        out << "Could not create DCAMREC_OPEN object." << std::endl;
+        return;
+    }
+    else
+    {
+        HDCAMREC hrec = recopen.hrec;
+
+        // attach recording handle to DCAM handle
+        err = dcamcap_record(hdcam, hrec);
+        if (failed(err))
+        {
+            out << "Could not attach recording handle to the DCAM module." << std::endl;
+            return;
+        }
+        else
+        {
+            // start capture
+            err = dcamcap_start(hdcam, DCAMCAP_START_SEQUENCE);
+            if (failed(err))
+            {
+                out << "Could not start camera recording." << std::endl;
+                return;
+            }
+            else
+            {
+                // set wait param
+                DCAMWAIT_START waitstart;
+                memset(&waitstart, 0, sizeof(waitstart));
+                waitstart.size = sizeof(waitstart);
+                waitstart.eventmask = DCAMWAIT_RECEVENT_STOPPED | DCAMWAIT_RECEVENT_WARNING | DCAMWAIT_RECEVENT_MISSED | DCAMWAIT_RECEVENT_DISKFULL | DCAMWAIT_RECEVENT_WRITEFAULT | DCAMWAIT_RECEVENT_SKIPPED;
+                waitstart.timeout = 1000;
+
+                // Wait for recording to complete
+                bool bStop = false;
+                while (!bStop)
+                {
+                    err = dcamwait_start(hwait, &waitstart);
+                    if (!failed(err) && (waitstart.eventhappened & DCAMWAIT_RECEVENT_STOPPED))
+                        bStop = true;
+                    if (!failed(err) && (waitstart.eventhappened & DCAMWAIT_RECEVENT_WARNING))
+                        out << "DCAMWAIT_RECEVENT_WARNING" << std::endl;
+                    if (!failed(err) && (waitstart.eventhappened & DCAMWAIT_RECEVENT_MISSED))
+                        out << "DCAMWAIT_RECEVENT_MISSED" << std::endl;
+                    if (!failed(err) && (waitstart.eventhappened & DCAMWAIT_RECEVENT_DISKFULL))
+                        out << "DCAMWAIT_RECEVENT_DISKFULL" << std::endl;
+                    if (!failed(err) && (waitstart.eventhappened & DCAMWAIT_RECEVENT_WRITEFAULT))
+                        out << "DCAMWAIT_RECEVENT_WRITEFAULT" << std::endl;
+                    if (!failed(err) && (waitstart.eventhappened & DCAMWAIT_RECEVENT_SKIPPED))
+                        out << "DCAMWAIT_RECEVENT_SKIPPED" << std::endl;
+
+                    // get recording status
+                    DCAMREC_STATUS recstatus;
+                    memset(&recstatus, 0, sizeof(recstatus));
+                    recstatus.size = sizeof(recstatus);
+                    err = dcamrec_status(hrec, &recstatus);
+                    if (failed(err))
+                        out << "Could not get the recording status." << std::endl;
+                    else
+                        out << "Flags: " << recstatus.flags << ", "
+                        << "Frames recorded: " << recstatus.currentframe_index << ", "
+                        << "Frames missed: " << recstatus.missingframe_count << ", "
+                        << "Total frames: " << recstatus.totalframecount << std::endl;
+                }
+                // stop capture
+                dcamcap_stop(hdcam);
+            }
+        }
+        // close file
+        dcamrec_close(hrec);
+    }
+}
+
+void startCamRecording(std::ostream& out, HDCAM hdcam, camRecInfo recInfo)
+{
+    DCAMERR err;
+
+    // open wait handle
+    DCAMWAIT_OPEN	waitopen;
+    memset(&waitopen, 0, sizeof(waitopen));
+    waitopen.size = sizeof(waitopen);
+    waitopen.hdcam = hdcam;
+
+    err = dcamwait_open(&waitopen);
+    if (failed(err))
+    {
+        out << "Could not create DCAMWAIT_OPEN object." << std::endl;
+        return;
+    }
+    else
+    {
+        HDCAMWAIT hwait = waitopen.hwait;
+
+        // allocate buffer
+        int32 number_of_buffer = 50;
+        err = dcambuf_alloc(hdcam, number_of_buffer);
+        if (failed(err))
+        {
+            out << "Could not allocate frame buffer in the DCAM module." << std::endl;
+            return;
+        }
+        else
+        {
+            // Start recording
+            recordFrames(out, hdcam, hwait, recInfo);
+
+            // release buffer
+            dcambuf_release(hdcam);
+        }
+        // close wait handle
+        dcamwait_close(hwait);
+    }
+}

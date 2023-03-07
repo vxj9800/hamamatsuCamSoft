@@ -1,0 +1,15 @@
+#pragma once
+
+#define NOMINMAX
+#include "../misc/console4.h"
+
+#include <iostream>
+#include <filesystem>
+
+struct camRecInfo
+{
+	std::filesystem::path filePath;
+	unsigned int nFrames = 0;
+};
+
+void startCamRecording(std::ostream& out, HDCAM hdcam, camRecInfo recInfo);
