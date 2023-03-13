@@ -10,8 +10,11 @@
 #include "camProp.h"
 #include "liveCap.h"
 #include "camRec.h"
+#include "shtrCtrl.h"
+#include "condExps.h"
 #include "cli/include/cli/cli.h"
-#include "cli/include/cli/clifilesession.h"
+#include "cli/include/cli/loopscheduler.h"
+#include "cli/include/cli/clilocalsession.h"
 #include <iomanip>
 #include <thread>
 #include <filesystem>

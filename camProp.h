@@ -12,7 +12,7 @@ constexpr int datatypeNameSize = 8;
 constexpr int suppValNameSize = 24;
 constexpr int unitNameSize = 16;
 
-struct camPropInfo
+typedef struct _camPropInfo
 {
 	int32 propID = 0;
 	DCAMPROP_ATTR propAttr;
@@ -29,12 +29,14 @@ struct camPropInfo
 	double step = std::numeric_limits<double>::quiet_NaN();
 	double defaultVal = std::numeric_limits<double>::quiet_NaN();
 	double currentVal = std::numeric_limits<double>::quiet_NaN();
-};
+} camPropInfo;
+
+extern std::vector<camPropInfo> camProps; // Array to store camera properties
 
 camPropInfo get_camPropInfo(HDCAM hdcam, int32 propID);
-void fillCamProps(HDCAM hdcam, std::vector<camPropInfo>& camProps, size_t& nCamProps);
-void printCamPropsArray(std::ostream& out, std::vector<camPropInfo>& camProps, size_t& nCamProps);
-void printCamPropInfo(std::ostream& out, size_t camPropsIdx, std::vector<camPropInfo>& camProps, size_t& nCamProps);
-int getCamPropsIdxByName(std::string& propName, std::vector<camPropInfo>& camProps, size_t& nCamProps);
-int getCamPropsIdxByID(int32 propID, std::vector<camPropInfo>& camProps, size_t& nCamProps);
-void setCamPropValue(HDCAM hdcam, std::ostream& out, size_t camPropsIdx, double val, std::vector<camPropInfo>& camProps, size_t& nCamProps);
+void fillCamProps(HDCAM hdcam);
+void printCamPropsArray(std::ostream& out);
+void printCamPropInfo(std::ostream& out, size_t camPropsIdx);
+int getCamPropsIdxByName(std::string& propName);
+int getCamPropsIdxByID(int32 propID);
+void setCamPropValue(HDCAM hdcam, std::ostream& out, size_t camPropsIdx, double val);

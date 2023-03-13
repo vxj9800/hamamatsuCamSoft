@@ -1,5 +1,8 @@
 #include "camProp.h"
 
+// Define global variables
+std::vector<camPropInfo> camProps; // Array to store camera properties
+
 camPropInfo get_camPropInfo(HDCAM hdcam, int32 propID)
 {
 	camPropInfo propInfo;
@@ -101,7 +104,7 @@ camPropInfo get_camPropInfo(HDCAM hdcam, int32 propID)
 	return propInfo;
 }
 
-void fillCamProps(HDCAM hdcam, std::vector<camPropInfo>& camProps, size_t& nCamProps)
+void fillCamProps(HDCAM hdcam)
 {
 	camProps.clear(); // Empty out the array
 	int32 iProp = 0;	// property IDs
@@ -122,10 +125,9 @@ void fillCamProps(HDCAM hdcam, std::vector<camPropInfo>& camProps, size_t& nCamP
 			}
 		}
 	}
-	nCamProps = camProps.size();
 }
 
-void printCamPropsArray(std::ostream& out, std::vector<camPropInfo>& camProps, size_t& nCamProps)
+void printCamPropsArray(std::ostream& out)
 {
 	out << std::setw(102) << std::setfill('-') << "" << std::endl << std::setfill(' ');
 	out << "| " << std::right << std::setw(11) << "Property ID" << " | ";
@@ -135,7 +137,7 @@ void printCamPropsArray(std::ostream& out, std::vector<camPropInfo>& camProps, s
 	out << std::right << std::setw(unitNameSize) << "Unit" << " |" << std::endl;
 	out << std::setw(102) << std::setfill('-') << "" << std::endl << std::setfill(' ');
 
-	for (size_t i = 0; i < nCamProps; ++i)
+	for (size_t i = 0; i < camProps.size(); ++i)
 	{
 		out << "| " << std::right << std::setw(11) << camProps[i].propID << " | ";
 		out << std::left << std::setw(propNameSize) << camProps[i].propName << " | ";
@@ -149,45 +151,42 @@ void printCamPropsArray(std::ostream& out, std::vector<camPropInfo>& camProps, s
 	out << std::setw(102) << std::setfill('-') << "" << std::endl << std::setfill(' ');
 }
 
-void printCamPropInfo(std::ostream& out, size_t camPropsIdx, std::vector<camPropInfo>& camProps, size_t& nCamProps)
+void printCamPropInfo(std::ostream& out, size_t camPropsIdx)
 {
-	out << "\tID: " << camProps[camPropsIdx].propID << std::endl; // Print out the ID of the property
-
-	out << "\tName: " << camProps[camPropsIdx].propName << std::endl; // Print out the name of the property
-
-	out << "\tAttributes: " << std::endl;  // Print out the property attributes
-	for (int i = 0; i < camProps[camPropsIdx].nAttr; ++i)
-		out << "\t\t" << camProps[camPropsIdx].attrNames[i] << std::endl;
-
-	out << "\tDatatype: " << camProps[camPropsIdx].dataType << std::endl; // Print out the property datatype
-
-	if (camProps[camPropsIdx].nSuppVals >= 0) // List possible values for the property
+	// Make sure that the idx is within the array size
+	if (camPropsIdx < camProps.size())
 	{
-		out << "\tSupported Values: " << std::endl;
-		for (int i = 0; i < camProps[camPropsIdx].nSuppVals; ++i)
-			out << "\t\t" << std::setw(8) << std::left << camProps[camPropsIdx].suppVals[i] << " " << camProps[camPropsIdx].suppValNames[i] << std::endl;
+		out << "\tID: " << camProps[camPropsIdx].propID << std::endl; // Print out the ID of the property
+		out << "\tName: " << camProps[camPropsIdx].propName << std::endl; // Print out the name of the property
+		out << "\tAttributes: " << std::endl; // Print out the property attributes
+		for (int i = 0; i < camProps[camPropsIdx].nAttr; ++i)
+			out << "\t\t" << camProps[camPropsIdx].attrNames[i] << std::endl;
+		out << "\tDatatype: " << camProps[camPropsIdx].dataType << std::endl; // Print out the property datatype
+		if (camProps[camPropsIdx].nSuppVals >= 0) // List possible values for the property
+		{
+			out << "\tSupported Values: " << std::endl;
+			for (int i = 0; i < camProps[camPropsIdx].nSuppVals; ++i)
+				out << "\t\t" << std::setw(8) << std::left << camProps[camPropsIdx].suppVals[i] << " " << camProps[camPropsIdx].suppValNames[i] << std::endl;
+		}
+		if (!std::isnan(camProps[camPropsIdx].min)) // Print out the minimum possible property values
+			out << "\tMinimum: " << camProps[camPropsIdx].min << std::endl;
+		if (!std::isnan(camProps[camPropsIdx].max)) // Print out the maximum possible property values
+			out << "\tMaximum: " << camProps[camPropsIdx].max << std::endl;
+		if (!std::isnan(camProps[camPropsIdx].step)) // Print out the step size of property values
+			out << "\tStep: " << camProps[camPropsIdx].step << std::endl;
+		if (!std::isnan(camProps[camPropsIdx].defaultVal)) // Print out the default property value
+			out << "\tDefault Value: " << camProps[camPropsIdx].defaultVal << std::endl;
+		if (!std::isnan(camProps[camPropsIdx].currentVal)) // Print out current property value
+			out << "\tCurrent Value: " << camProps[camPropsIdx].currentVal << std::endl;
 	}
-
-	if (!std::isnan(camProps[camPropsIdx].min)) // Print out the minimum possible property values
-		out << "\tMinimum: " << camProps[camPropsIdx].min << std::endl;
-
-	if (!std::isnan(camProps[camPropsIdx].max)) // Print out the maximum possible property values
-		out << "\tMaximum: " << camProps[camPropsIdx].max << std::endl;
-
-	if (!std::isnan(camProps[camPropsIdx].step)) // Print out the step size of property values
-		out << "\tStep: " << camProps[camPropsIdx].step << std::endl;
-
-	if (!std::isnan(camProps[camPropsIdx].defaultVal)) // Print out the default property value
-		out << "\tDefault Value: " << camProps[camPropsIdx].defaultVal << std::endl;
-
-	if (!std::isnan(camProps[camPropsIdx].currentVal)) // Print out current property value
-		out << "\tCurrent Value: " << camProps[camPropsIdx].currentVal << std::endl;
+	else
+		out << "Invalid Camera Property Index. Update the camera property list to make sure that the property exists." << std::endl;
 }
 
-int getCamPropsIdxByName(std::string& propName, std::vector<camPropInfo>& camProps, size_t& nCamProps)
+int getCamPropsIdxByName(std::string& propName)
 {
 	int propListIdx = -1;
-	for (int i = 0; i < nCamProps; ++i)
+	for (int i = 0; i < camProps.size(); ++i)
 		if (propName.compare(camProps[i].propName) == 0)
 		{
 			propListIdx = i;
@@ -196,10 +195,10 @@ int getCamPropsIdxByName(std::string& propName, std::vector<camPropInfo>& camPro
 	return propListIdx;
 }
 
-int getCamPropsIdxByID(int32 propID, std::vector<camPropInfo>& camProps, size_t& nCamProps)
+int getCamPropsIdxByID(int32 propID)
 {
 	int propListIdx = -1;
-	for (int i = 0; i < nCamProps; ++i)
+	for (int i = 0; i < camProps.size(); ++i)
 		if (camProps[i].propID == propID)
 		{
 			propListIdx = i;
@@ -208,20 +207,23 @@ int getCamPropsIdxByID(int32 propID, std::vector<camPropInfo>& camProps, size_t&
 	return propListIdx;
 }
 
-void setCamPropValue(HDCAM hdcam, std::ostream& out, size_t camPropsIdx, double val, std::vector<camPropInfo>& camProps, size_t& nCamProps)
+void setCamPropValue(HDCAM hdcam, std::ostream& out, size_t camPropsIdx, double val)
 {
-	DCAMERR err;
-	err = dcamprop_setgetvalue(hdcam, camProps[camPropsIdx].propID, &val);
+	DCAMERR err = DCAMERR_SUCCESS;
+	double reqVal = val;
+	do
+	{
+		val = reqVal;
+		err = dcamprop_setgetvalue(hdcam, camProps[camPropsIdx].propID, &val);
+		fillCamProps(hdcam);
+	} while (err == DCAMERR_SUCCESS && camProps[camPropsIdx].currentVal != val);
+
 	if (failed(err))
 	{
-		out << "Make sure that the value provided is valid." << std::endl;
+		out << "Failed setting " << camProps[camPropsIdx].propName << " = " << reqVal << std::endl
+			<< "Make sure that the value provided is valid." << std::endl;
 		camProps[camPropsIdx] = get_camPropInfo(hdcam, camProps[camPropsIdx].propID);
-		printCamPropInfo(out, camPropsIdx, camProps, nCamProps);
+		printCamPropInfo(out, camPropsIdx);
 		return;
-	}
-	else
-	{
-		fillCamProps(hdcam, camProps, nCamProps);
-		out << "Value of property \"" << camProps[camPropsIdx].propName << "\" is updated to " << val << "." << std::endl;
 	}
 }

@@ -1,5 +1,11 @@
 #include "camRec.h"
 
+// Variable to indicate the current state of recording
+std::atomic<bool> camRcrdng = false;
+
+// Variable to indicate whether the camera is ready to start recording
+std::atomic<bool> camRdy2Capt = false;
+
 void recordFrames(std::ostream& out, HDCAM hdcam, HDCAMWAIT hwait)
 {
     DCAMERR err;
@@ -13,6 +19,9 @@ void recordFrames(std::ostream& out, HDCAM hdcam, HDCAMWAIT hwait)
     }
     else
     {
+        // State that the camera is ready to capture frames
+        camRdy2Capt = true;
+
         // set wait param
         DCAMWAIT_START waitstart;
         memset(&waitstart, 0, sizeof(waitstart));
@@ -60,11 +69,18 @@ void recordFrames(std::ostream& out, HDCAM hdcam, HDCAMWAIT hwait)
         }
         // stop capture
         dcamcap_stop(hdcam);
+
+        // State that the camera is not ready to capture frames
+        camRdy2Capt = false;
     }
 }
 
 void startCamRecording(std::ostream& out, HDCAM hdcam, camRecInfo recInfo)
 {
+    // State that this function is called
+    camRcrdng = true;
+
+    // Variable for string error codes
     DCAMERR err;
 
     // open wait handle
@@ -75,10 +91,7 @@ void startCamRecording(std::ostream& out, HDCAM hdcam, camRecInfo recInfo)
 
     err = dcamwait_open(&waitopen);
     if (failed(err))
-    {
         out << "Could not create DCAMWAIT_OPEN object." << std::endl;
-        return;
-    }
     else
     {
         HDCAMWAIT hwait = waitopen.hwait;
@@ -167,4 +180,14 @@ void startCamRecording(std::ostream& out, HDCAM hdcam, camRecInfo recInfo)
         // close wait handle
         dcamwait_close(hwait);
     }
+
+    // State that this function call has ended
+    camRcrdng = false;
+}
+
+void waitFinishCamRcrdng(std::ostream &out)
+{
+    if (camRcrdng)
+        out << "Waiting for the camera to finish recording." << std::endl;
+    while (camRcrdng);
 }

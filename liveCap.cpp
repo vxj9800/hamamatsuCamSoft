@@ -1,22 +1,15 @@
 #include "liveCap.h"
 
-// Global variable to indicate live capture state
-bool liveCapOn = false;
+// Define globals for this file only
+GLsizei liveCapImgWidth = 2048, liveCapImgHeight = 2048;                                  // Global variables to store image size
+double liveCapOffsetX = 0, liveCapOffsetY = 0, liveCapScale = 1, liveCapWinPxPerImPx = 1; // Global variables for pan and zoom
+GLfloat liveCapLutMin = 0, liveCapLutMax = 65535;                                         // Global variables to define LUT
+GLint liveCapLutMinUniformLoc = -1, liveCapLutMaxUniformLoc = -1;                         // Global uniform location for LUT values
+GLint liveCapMVPUniformLoc = -1;                                                          // Global uniform location for MVP matrix
+bool liveFeedStopped = true;                                                              // Variable stating whether the live feed is stopped or not
 
-// Global variables to store image size
-GLsizei liveCapImgWidth = 2048, liveCapImgHeight = 2048;
-
-// Global variables for pan and zoom
-double liveCapOffsetX = 0, liveCapOffsetY = 0, liveCapScale = 1, liveCapWinPxPerImPx = 1;
-
-// Global variables to define LUT
-GLfloat liveCapLutMin = 0, liveCapLutMax = 65535;
-
-// Global uniform location for LUT values
-GLint liveCapLutMinUniformLoc = -1, liveCapLutMaxUniformLoc = -1;
-
-// Global uniform location for MVP matrix
-GLint liveCapMVPUniformLoc = -1;
+// Define globals that are 'extern' in the header file
+std::atomic<bool> liveCapOn = false; // Global variable to indicate live capture state
 
 GLuint CompileShader(GLuint type, const std::string& source)
 {
@@ -314,8 +307,11 @@ void liveCapShow(std::ostream& out, HDCAM hdcam)
     // Call window resize function to correctly initialize MVP
     handleWindowResize(window, liveCapWindowWidth, liveCapWindowHeight);
 
+    // State that the live feed is started
+    liveFeedStopped = false;
+
     /* Loop until the user closes the window */
-    while (liveCapOn)
+    while (!liveFeedStopped)
     {
         /* Render here */
         GLCall(glClear(GL_COLOR_BUFFER_BIT));
@@ -352,8 +348,24 @@ void liveCapShow(std::ostream& out, HDCAM hdcam)
     return;
 }
 
+void setCamCapImgSize(double width, double height)
+{
+    liveCapImgWidth = (GLsizei)width;
+    liveCapImgWidth = (GLsizei)height;
+}
+
+void setCamCapLUT(int min, int max)
+{
+    liveCapLutMin = (GLfloat)min;
+    liveCapLutMax = (GLfloat)max;
+}
+
 void startCamCap(std::ostream& out, HDCAM hdcam)
 {
+    // State that live capture has started
+    liveCapOn = true;
+
+    // Variable to hold camera errors
     DCAMERR err;
 
     // open wait handle
@@ -408,7 +420,6 @@ void startCamCap(std::ostream& out, HDCAM hdcam)
 
                 // Start the live feed
                 liveCapShow(out, hdcam);
-                liveCapOn = false;
 
                 // stop capture
                 dcamcap_stop(hdcam);
@@ -421,4 +432,19 @@ void startCamCap(std::ostream& out, HDCAM hdcam)
         // close wait handle
         dcamwait_close(hwait);
     }
+
+    // State that the liveCap is stopped
+    liveCapOn = false;
+}
+
+void stopCamCap(std::ostream &out)
+{
+    if (liveCapOn)
+    {
+        out << "Stopping the live feed." << std::endl;
+        liveFeedStopped = true;
+        setCamCapLUT();
+    }
+
+    while (liveCapOn);
 }

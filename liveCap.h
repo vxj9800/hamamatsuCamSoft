@@ -30,22 +30,10 @@ do {                                        \
     }                                       \
 } while (0)
 
-void startCamCap(std::ostream & out, HDCAM hdcam);
-
 // Global variable to indicate live capture state
-extern bool liveCapOn;
+extern std::atomic<bool> liveCapOn;
 
-// Global variables to store image size
-extern GLsizei liveCapImgWidth, liveCapImgHeight;
-
-// Global variables for pan and zoom
-extern double liveCapOffsetX, liveCapOffsetY, liveCapScale, liveCapWinPxPerImPx;
-
-// Global variables to define LUT
-extern GLfloat liveCapLutMin, liveCapLutMax;
-
-// Global uniform location for LUT values
-extern GLint liveCapLutMinUniformLoc, liveCapLutMaxUniformLoc;
-
-// Global uniform location for MVP matrix
-extern GLint liveCapMVPUniformLoc;
+void setCamCapImgSize(double width, double height);
+void setCamCapLUT(int min = 0, int max = 65535);
+void startCamCap(std::ostream &out, HDCAM hdcam);
+void stopCamCap(std::ostream &out);
