@@ -351,7 +351,7 @@ void liveCapShow(std::ostream& out, HDCAM hdcam)
 void setCamCapImgSize(double width, double height)
 {
     liveCapImgWidth = (GLsizei)width;
-    liveCapImgWidth = (GLsizei)height;
+    liveCapImgHeight = (GLsizei)height;
 }
 
 void setCamCapLUT(int min, int max)

@@ -1,0 +1,10 @@
+camProp setByName "SUBARRAY MODE" 2
+camProp setByName "SUBARRAY HSIZE" 512
+camProp setByName "SUBARRAY HPOS" 768
+
+camProp setByName "SUBARRAY MODE" 2
+camProp setByName "SUBARRAY VSIZE" 32
+camProp setByName "SUBARRAY VPOS" 1008
+camProp setByName "EXPOSURE TIME" 0.0001559
+
+camProp setByName "SUBARRAY MODE" 1
